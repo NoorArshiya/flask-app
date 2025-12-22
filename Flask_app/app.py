@@ -14,7 +14,6 @@ API_KEY = os.getenv("API_KEY")
 
 app = Flask(__name__)
 
-
 @app.route('/')
 def home():
     return render_template("index.html", name="John")
@@ -79,31 +78,12 @@ def api_ai_prompt():
         print(e)
         return {"message":"Error"},500
 
-# @app.route('/ai/chatbot',methods=["GET","POST"])
-# def ai_chatbot():
-#     if request.method == "POST":
-#         try:
-#             data=request.json
-#             print(data)
-#             prompt=data.get("prompt")
-#
-#             client = genai.Client(api_key=api_key)
-#             response = client.models.generate_content(
-#                 model="gemini-2.5-flash-lite",
-#                 contents=prompt
-#             )
-#             return {"message":response.text},200
-#         except Exception as e:
-#             print(e)
-#             return {"message":"Error"},500
-#
-#     return render_template("chat.html")
 
 # ai_chatbot with sessions ..
 
 app.secret_key = "flask_app_v2"     #Authentication (Security)
-DATABASE_URL = os.getenv("DATABASE_URL")
-client = MongoClient(DATABASE_URL)
+DATABASE_CONN_STR = os.getenv("DATABASE_CONN_STR")
+client = MongoClient(DATABASE_CONN_STR)
 database = client["ai_chatbot"]
 collection = database["chats"]
 
@@ -190,8 +170,6 @@ def clear_history():
 
     session.pop('session_id',None)
 
-    # session['session_id'] = str(uuid.uuid4())
-
     session.modified = True
     return {"message":"History cleared"},200
 
@@ -238,6 +216,44 @@ def view_chats(session_id):
     chat_history = list(collection.find({"session_id":session_id}).sort("timestamp",-1))
     return render_template("chat_history.html",session_id = session_id,chat = chat_history)
 
+#Error-Logs
+
+DATABASE_CONN_STR = os.getenv("DATABASE_CONN_STR")
+dest_client = MongoClient(DATABASE_CONN_STR)
+dest_database = dest_client["ErrorLogsWJ"]
+dest_collection = dest_database["error_logs"]
+
+@app.route('/api/error-logs')
+def error_logs():
+    logs_data = list(dest_collection.find().sort("timestamp",-1))
+    pipeline = [
+        {
+            "$facet": {
+                "project_totals": [
+                    {
+                        "$group": {
+                            "_id": "$project_name",
+                            "total_count": {"$sum": 1}
+                        }
+                    },
+                    {"$sort": {"total_count": -1}}
+                ],
+                "response_code_totals": [
+                    {
+                        "$group": {
+                            "_id": "$response_code",
+                            "total_count": {"$sum": 1}
+                        }
+                    },
+                    {"$sort": {"total_count": -1}}
+                ]
+            }
+        }
+    ]
+
+    stats_data = list(dest_collection.aggregate(pipeline))[0]
+    return render_template("error_logs.html",logs = logs_data,stats = stats_data)
+
 # ai_job_generator_CHATBOT
 client = genai.Client(api_key=API_KEY)
 system_instruction = f"""You are an AI Job Generator. Follow this exact interaction loop:
@@ -255,7 +271,6 @@ chat = client.chats.create(
             # response_mime_type="application/json"
         )
     )
-# response789 = chat.send_message("")
 
 @app.route('/ai/job/generator', methods=["GET", "POST"])
 def ai_job_generator():
