@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chatbot Statistics</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: white;
+            margin: 0;
+            padding: 20px;
+            flex-direction: column;
+            align-item: center;
+        }
+        h1 {
+        color : #333;
+        margin-bottom: 20px;
+        }
+
+        .stats-container {
+            display:flex;
+            gap:30px;
+            flex-wrap:wrap;
+            justify-content: center;
+        }
+
+        .card {
+            background: white;
+            border-radius:10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 30px;
+            width: 200px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            color: #777;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        .card-value {
+            color: #2c3e50;
+            font-size: 48px;
+            font-weight: bold;
+            margin: 10px 0 0 0;
+        }
+    </style>
+</head>
+<body>
+    <h1> 🤖 AI Chatbot Statistics </h1>
+    <div class="stats-container">
+
+        <!-- Card 1: Sessions -->
+        <a href="/session/details" style="text-decoration: none; color: inherit;">
+        <div class="card sessions">
+            <div class="card-icon">👥</div>
+            <p class="card-title">Total Sessions</p>
+            <p class="card-value">{{ sessions }}</p>
+            <small>Click to view details</small>
+        </div>
+        </a>
+
+         <!-- Card 2: Messages -->
+        <div class="card messages">
+            <div class="card-icon">💬</div>
+            <p class="card-title">Total Messages</p>
+            <p class="card-value">{{messages}}</p>
+        </div>
+
+        <!-- Card 2: User-Messages -->
+        <div class="card user">
+            <div class="card-icon">👤</div>
+            <p class="card-title">User Messages</p>
+            <p class="card-value">{{user_count}}</p>
+        </div>
+
+        <!-- Card 2: Bot-Messages -->
+        <div class="card bot">
+            <div class="card-icon">🤖</div>
+            <p class="card-title">Bot Messages</p>
+            <p class="card-value">{{bot_count}}</p>
+        </div>
+
+        <!-- Card 3: Errors -->
+
+        <a href="/error/details" style="text-decoration: none; color: inherit;">
+        <div class="card errors">
+            <div class="card-icon">️️️⚠️</div>
+            <p class="card-title">total Errors</p>
+            <p class="card-value">{{errors}}</p>
+            <small>Click to view logs</small>
+        </div>
+        </a>
+
+        <a href="/ai/chatbot" class="btn-back">← Back to Chat</a>
+    </div>
+</body>
+</html>
+
+

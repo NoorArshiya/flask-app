@@ -1,0 +1,51 @@
+<!-- ai_response = f"AI received your prompt: {prompt}"-->
+
+<!--        return jsonify({-->
+<!--            "response": ai_response-->
+<!--        }), 200-->
+
+<!--    except Exception as e:-->
+<!--        # Any unexpected error-->
+<!--        return jsonify({-->
+<!--            "error": "Something went wrong",-->
+<!--            "message": str(e)-->
+<!--        }), 500-->
+
+
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>User Profile {{username}} </title>-->
+<!--</head>-->
+<!--<body>-->
+<!--<header>-->
+<!--    <h1>User Profile</h1>-->
+<!--</header>-->
+<!--</body>-->
+<!--</html>-->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav>
+    <a href="/">Home</a>
+    <a href="/about">About</a>
+    <a href="/jobs">Jobs</a>
+    <a href="/profile/{{ name }}">Profile</a>
+</nav>
+
+<div class="container">
+    <h1>Profile of {{ name }}</h1>
+    <p>This is a user profile page.</p>
+</div>
+</body>
+</html>
+
+

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI JOB GENERATOR CHATBOT </title>
+</head>
+<body>
+<h1>AI Job Generator  </h1>
+
+<div id="chatWindow" style="border: 1px solid #000; height: 250px; overflow-y: scroll; padding: 10px;"></div>
+
+<br>
+<input id="userInput" type="text" placeholder="Type Your Message..">
+<button onclick="sendMessage()">Send </button>
+
+<script>
+    let messages = [];
+    const inputArea = document.getElementById("userInput");
+    const chatWindow = document.getElementById("chatWindow");
+
+    const initialText = "Hello! To start, please Enter the Job title";
+
+    messages.push({ role: "Bot", content: initialText });
+    chatWindow.innerHTML += "<p><b>Bot:</b> " + initialText + "</p>";
+
+      function sendMessage() {
+        text = inputArea.value;
+        if (!text) return;
+
+        messages.push({ role: "user", content: text });
+        chatWindow.innerHTML += "<p><b>You:</b> " + text + "</p>";
+        inputArea.value = "";
+
+    fetch("/ai/job/generator",{
+        method: "POST",
+        headers: {"content-Type": "application/json" },
+        body: JSON.stringify ({prompt:text})
+    })
+        .then(res => res.json())
+        .then(data => {
+            let reply = "";
+
+            if (data.status === "completed") {
+                reply = JSON.stringify(data.jobs, null, 2);
+                reply = "Here is the JSON output:<br><pre>" + reply + "</pre>";
+            } else {
+                reply = data.message;
+            }
+
+            messages.push({ role: "model", content: reply });
+            chatWindow.innerHTML += "<p><b>Bot:</b> " + reply + "</p>";
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        })
+        .catch(err => {
+            console.error(err);
+        });
+    }
+</script>
+</body>
+</html>
+

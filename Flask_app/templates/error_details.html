@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Error-details</title>
+</head>
+<body>
+    <h2>Error Logs</h2>
+    <table border = "1">
+        <tr>
+            <th>Timestamp</th>
+            <th>ErrorMessages</th>
+            <th>Session-ID</th>
+        </tr>
+        {% for err in errors %}
+        <tr>
+            <td>{{err['timestamp'] }}</td>
+            <td>{{err['message'] }}</td>
+            <td>{{err['session_id'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <a href="/chats/stats">Back to Dashboard</a>
+</body>
+</html>
+

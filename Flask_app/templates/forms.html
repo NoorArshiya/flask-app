@@ -1,0 +1,92 @@
+<!--<form id = "JobForm">-->
+<!--    <label for="job_title">Job Title:</label><br>-->
+<!--    <input type="text" id="job_title" name="job_title"><br><br>-->
+
+<!--    <label for="job_company">Company:</label><br>-->
+<!--    <input type="text" id="job_company" name="job_company"><br><br>-->
+
+<!--    <label for="job_location">Location:</label><br>-->
+<!--    <input type="text" id="job_location" name="job_location"><br><br>-->
+
+<!--    <input type="submit" value="Submit">-->
+<!--</form>-->
+
+<!--<!DOCTYPE html>-->
+<!--<html>-->
+<!--<head>-->
+<!--    <title>Job Submission Form</title>-->
+<!--</head>-->
+<!--<body>-->
+<!--    <h1>Submit a Job</h1>-->
+<!--    <form method="POST" action="/submit/job">-->
+<!--        <label for="job_title">Job Title:</label><br>-->
+<!--        <input type="text" id="job_title" name="job_title"><br><br>-->
+
+<!--        <label for="job_company">Company:</label><br>-->
+<!--        <input type="text" id="job_company" name="job_company"><br><br>-->
+
+<!--        <label for="job_location">Location:</label><br>-->
+<!--        <input type="text" id="job_location" name="job_location"><br><br>-->
+
+<!--        <input type="submit" value="Submit">-->
+<!--    </form>-->
+<!--</body>-->
+<!--</html>-->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Job Submission Form</title>
+</head>
+<body>
+
+    <h1>Create Job</h1>
+
+    <div>
+        <label>Job Title:</label>
+        <input type="text" id="title">
+        <br><br>
+
+        <label>Company:</label>
+        <input type="text" id="company">
+        <br><br>
+
+        <label>Location:</label>
+        <input type="text" id="location">
+        <br><br>
+
+        <!-- onclick submit -->
+        <button onclick="submitForm()">Submit</button>
+    </div>
+
+    <!-- Success message will appear here -->
+    <p id="responseMessage" style="color: #8e3fc1;"></p>
+
+<script>
+    function submitForm() {
+
+        const data = {
+            title: document.getElementById("title").value,
+            company: document.getElementById("company").value,
+            location: document.getElementById("location").value
+        };
+
+        fetch('/submit/job', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            document.getElementById("responseMessage").innerText = result.message;
+        })
+        .catch(error => {
+            console.error("Error:", error);
+        });
+    }
+</script>
+</body>
+</html>
+

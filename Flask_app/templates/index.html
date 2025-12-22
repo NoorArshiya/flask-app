@@ -1,0 +1,37 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>Flask App</title>-->
+<!--</head>-->
+<!--<body>-->
+<!--    <h1>Hello World!</h1>-->
+<!--</body>-->
+<!--</html>-->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav>
+    <a href="/">Home</a>
+    <a href="/about">About</a>
+    <a href="/jobs">Jobs</a>
+    <a href="/profile/John">Profile</a>
+</nav>
+
+<div class="container">
+    <h1>Welcome, {{ name }} 👋</h1>
+    <p>This is the homepage of your Flask website.</p>
+
+    <a class="btn" href="/jobs">View Jobs</a>
+</div>
+</body>
+</html>
+
+
+

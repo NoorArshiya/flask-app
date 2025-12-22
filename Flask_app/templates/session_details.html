@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Session-Details</title>
+</head>
+<body>
+    <h2>Session Breakdown</h2>
+    <table border = "1">
+        <tr>
+            <th>Session ID</th>
+            <th>Total Messages</th>
+        </tr>
+        {% for s in sessions %}
+        <tr>
+            <td>
+                <a href="/session/view/{{ s._id }}">{{ s._id }}</a>
+            </td>
+            <td>{{s.message_count}}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <a href="/chats/stats">Back to Dashboard</a>
+</body>
+</html>
+

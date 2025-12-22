@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat-History-{{session_id}}</title>
+</head>
+<body>
+    <div class="chat-box">
+        <h2>Conversation:{{session_id}}</h2>
+         <a href="/session/details">← Back to Sessions</a>
+        <hr>
+        {% for msg in chat %}
+            <div class="message {{ msg.role }}">
+                <strong>{{ "You" if msg.role == 'user' else "Bot" }}:</strong>
+                <p>
+                    {% if msg.message %}
+                        {{ msg.message }}
+                    {% elif msg.message %}
+                        {{ msg['message'][0]['text'] }}
+                    {% else %}
+                        <span style="color: gray;">[Empty Message]</span>
+                    {% endif %}
+                </p>
+
+                <small>{{ msg.timestamp }}</small>
+            </div>
+            {% endfor %}
+    </div>
+</body>
+</html>
+
+

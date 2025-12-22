@@ -1,0 +1,77 @@
+/*body {*/
+/*    font-family: sans-serif;*/
+/*}*/
+/*h1 {*/
+/*    color: blueviolet;*/
+/*}*/
+
+/* ---- Global Styling ---- */
+body {
+    font-family: Arial,sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #d6dadf;
+    color: #4c2d81;
+}
+
+h1, h2, h3 {
+    color: #aa2a6f;
+}
+
+/* Navigation Bar */
+nav {
+    background: rgba(101, 93, 124, 0.85);
+    padding: 10px 20px;
+    display: flex;
+    gap: 20px;
+}
+
+nav a {
+    color: #bfb2b2;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* Page Container */
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* Cards for jobs */
+.job-card {
+    background: #cac8c8;
+    padding: 20px;
+    margin: 15px 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.job-card h3 {
+    margin-top: 0;
+}
+
+.job-card p {
+    margin: 3px 0;
+}
+
+.btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 15px;
+    background: #2797aa;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+}
+
+.btn:hover {
+    background: #43adc6;
+}
+
+
