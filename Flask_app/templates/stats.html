@@ -2,112 +2,342 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chatbot Statistics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Statistics</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <!-- GSAP for Animation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
     <style>
+        /* 1. CORE THEME - MATCHING THE ERROR PAGE */
+        :root {
+            --bg-color: #050505;
+            --card-bg: #0a0a0a;
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #ededed;
+            --text-secondary: #888888;
+            --accent-glow: rgba(255, 255, 255, 0.15);
+            --font-ui: 'Inter', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: sans-serif;
-            background-color: white;
-            margin: 0;
-            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-ui);
+            min-height: 100vh;
+            display: flex;
             flex-direction: column;
-            align-item: center;
-        }
-        h1 {
-        color : #333;
-        margin-bottom: 20px;
-        }
-
-        .stats-container {
-            display:flex;
-            gap:30px;
-            flex-wrap:wrap;
+            align-items: center;
             justify-content: center;
+            overflow-x: hidden;
         }
 
-        .card {
-            background: white;
-            border-radius:10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            padding: 30px;
-            width: 200px;
-            text-align: center;
-            transition: transform 0.3s ease;
+        /* Noise Overlay */
+        .noise {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
         }
 
-        .card:hover {
-            transform: translateY(-5px);
+        /* 2. LAYOUT GRID (BENTO BOX STYLE) */
+        .dashboard-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 1200px;
+            padding: 40px;
         }
 
-        .card-icon {
-            font-size: 40px;
-            margin-bottom: 15px;
+        header {
+            margin-bottom: 60px;
+            text-align: left;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
         }
 
-        .card-title {
-            color: #777;
-            font-size: 16px;
+        h1 {
+            font-size: 32px;
+            font-weight: 500;
+            letter-spacing: -1px;
+            background: linear-gradient(to right, #fff, #888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-family: var(--font-code);
+            font-size: 12px;
+            color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 0;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        /* 3. LUXURY CARDS */
+        .card-wrapper {
+            position: relative;
+            background: var(--card-border); /* This forms the border */
+            padding: 1px; /* The border width */
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .card-wrapper:hover {
+            transform: translateY(-4px);
+        }
+
+        /* The Inner Content */
+        .card-content {
+            background: var(--card-bg);
+            border-radius: 11px; /* Slightly less than wrapper */
+            padding: 30px;
+            height: 100%;
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* The Spotlight Glow Effect */
+        .card-wrapper::before {
+            content: "";
+            position: absolute;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background: radial-gradient(
+                800px circle at var(--mouse-x) var(--mouse-y),
+                rgba(255, 255, 255, 0.15),
+                transparent 40%
+            );
+            z-index: 1;
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.4s ease;
+        }
+
+        .card-wrapper:hover::before {
+            opacity: 1;
+        }
+
+        /* Card Typography */
+        .card-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .card-value {
-            color: #2c3e50;
-            font-size: 48px;
-            font-weight: bold;
-            margin: 10px 0 0 0;
+            font-family: var(--font-code);
+            font-size: 42px;
+            font-weight: 400;
+            color: var(--text-primary);
+            letter-spacing: -2px;
         }
+
+        .click-hint {
+            font-size: 11px;
+            margin-top: 15px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            color: var(--text-secondary);
+            font-family: var(--font-code);
+        }
+
+        .card-wrapper:hover .click-hint {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Specific Grid Spans */
+        .span-2 { grid-column: span 2; }
+
+        /* Icons (SVG) */
+        .icon { width: 18px; height: 18px; opacity: 0.7; }
+
+        /* Error Card Specifics */
+        .error-card .card-value { color: #ff3b30; }
+        .error-card .icon { color: #ff3b30; }
+
+        /* 4. BACK LINK */
+        .nav-footer {
+            margin-top: 60px;
+        }
+
+        .btn-back {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            transition: color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-back:hover { color: var(--text-primary); }
+
+        /* Animation States */
+        .anim-entry { opacity: 0; transform: translateY(20px); }
+
     </style>
 </head>
 <body>
-    <h1> 🤖 AI Chatbot Statistics </h1>
-    <div class="stats-container">
 
-        <!-- Card 1: Sessions -->
-        <a href="/session/details" style="text-decoration: none; color: inherit;">
-        <div class="card sessions">
-            <div class="card-icon">👥</div>
-            <p class="card-title">Total Sessions</p>
-            <p class="card-value">{{ sessions }}</p>
-            <small>Click to view details</small>
+    <div class="noise"></div>
+
+    <div class="dashboard-container">
+
+        <header class="anim-entry">
+            <div>
+                <span class="subtitle">Real-time Analytics</span>
+                <h1>Chatbot Performance</h1>
+            </div>
+            <!-- Live Indicator -->
+            <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary); font-family:var(--font-code);">
+                <span style="width:8px; height:8px; background:#22c55e; border-radius:50%; box-shadow:0 0 10px #22c55e;"></span>
+                SYSTEM OPERATIONAL
+            </div>
+        </header>
+
+        <div class="grid-layout">
+
+            <!-- Card 1: Sessions (Clickable) -->
+            <a href="/session/details" class="card-wrapper span-2 anim-entry">
+                <div class="card-content">
+                    <div class="card-label">
+                        <!-- SVG Icon: Users -->
+                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        TOTAL SESSIONS
+                    </div>
+                    <!-- 'data-target' is used by GSAP to count up -->
+                    <div class="card-value" data-target="{{ sessions }}">0</div>
+                    <div class="click-hint">VIEW SESSION DETAILS →</div>
+                </div>
+            </a>
+
+            <!-- Card 2: Total Messages -->
+            <div class="card-wrapper anim-entry">
+                <div class="card-content">
+                    <div class="card-label">
+                        <!-- SVG Icon: Chat -->
+                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                        ALL MESSAGES
+                    </div>
+                    <div class="card-value" data-target="{{ messages }}">0</div>
+                </div>
+            </div>
+
+            <!-- Card 3: Errors (Clickable & Red) -->
+            <a href="/error/details" class="card-wrapper error-card anim-entry">
+                <div class="card-content">
+                    <div class="card-label">
+                        <!-- SVG Icon: Alert -->
+                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        SYSTEM ERRORS
+                    </div>
+                    <div class="card-value" data-target="{{ errors }}">0</div>
+                    <div class="click-hint" style="color: #ff3b30">VIEW LOGS →</div>
+                </div>
+            </a>
+
+            <!-- Card 4: User Messages -->
+            <div class="card-wrapper anim-entry">
+                <div class="card-content">
+                    <div class="card-label">
+                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        USER INPUTS
+                    </div>
+                    <div class="card-value" data-target="{{ user_count }}">0</div>
+                </div>
+            </div>
+
+            <!-- Card 5: Bot Messages -->
+            <div class="card-wrapper anim-entry">
+                <div class="card-content">
+                    <div class="card-label">
+                        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        BOT REPLIES
+                    </div>
+                    <div class="card-value" data-target="{{ bot_count }}">0</div>
+                </div>
+            </div>
+
         </div>
-        </a>
 
-         <!-- Card 2: Messages -->
-        <div class="card messages">
-            <div class="card-icon">💬</div>
-            <p class="card-title">Total Messages</p>
-            <p class="card-value">{{messages}}</p>
+        <div class="nav-footer anim-entry">
+            <a href="/ai/chatbot" class="btn-back">
+                <span>←</span> Return to Chat Interface
+            </a>
         </div>
 
-        <!-- Card 2: User-Messages -->
-        <div class="card user">
-            <div class="card-icon">👤</div>
-            <p class="card-title">User Messages</p>
-            <p class="card-value">{{user_count}}</p>
-        </div>
-
-        <!-- Card 2: Bot-Messages -->
-        <div class="card bot">
-            <div class="card-icon">🤖</div>
-            <p class="card-title">Bot Messages</p>
-            <p class="card-value">{{bot_count}}</p>
-        </div>
-
-        <!-- Card 3: Errors -->
-
-        <a href="/error/details" style="text-decoration: none; color: inherit;">
-        <div class="card errors">
-            <div class="card-icon">️️️⚠️</div>
-            <p class="card-title">total Errors</p>
-            <p class="card-value">{{errors}}</p>
-            <small>Click to view logs</small>
-        </div>
-        </a>
-
-        <a href="/ai/chatbot" class="btn-back">← Back to Chat</a>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            // 1. Staggered Entrance Animation
+            gsap.to(".anim-entry", {
+                y: 0,
+                opacity: 1,
+                duration: 1,
+                stagger: 0.1,
+                ease: "power4.out"
+            });
+
+            // 2. Number Counter Animation
+            const numbers = document.querySelectorAll('.card-value');
+            numbers.forEach(num => {
+                const target = parseInt(num.getAttribute('data-target'));
+                gsap.to(num, {
+                    innerHTML: target,
+                    duration: 1.5,
+                    snap: { innerHTML: 1 }, // Snap to whole numbers
+                    ease: "power2.out",
+                    delay: 0.5
+                });
+            });
+
+            // 3. Spotlight Hover Effect Logic
+            const cards = document.querySelectorAll('.card-wrapper');
+
+            document.querySelector('.grid-layout').onmousemove = e => {
+                for(const card of cards) {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+
+                    card.style.setProperty('--mouse-x', `${x}px`);
+                    card.style.setProperty('--mouse-y', `${y}px`);
+                }
+            };
+        });
+    </script>
 </body>
 </html>
-
-

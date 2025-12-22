@@ -2,31 +2,257 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chat-History-{{session_id}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Session</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        /* 1. SETUP & THEME */
+        :root {
+            --bg-color: #050505;
+            --header-bg: rgba(10, 10, 10, 0.8);
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+
+            /* User Bubble: Deep Luxury Blue Gradient */
+            --user-bg-start: #3b82f6;
+            --user-bg-end: #2563eb;
+
+            /* Bot Bubble: Matte Dark Grey */
+            --bot-bg: #1a1a1a;
+            --bot-border: rgba(255, 255, 255, 0.08);
+
+            --font-ui: 'Inter', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-ui);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding-top: 100px; /* Space for fixed header */
+            padding-bottom: 40px;
+        }
+
+        /* Noise Texture (Keeps the consistency) */
+        .noise {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: -1; opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* 2. FIXED HEADER (Like an App Bar) */
+        .app-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 80px;
+            background: var(--header-bg);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .app-bar-content {
+            width: 100%; max-width: 800px;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+        .back-btn:hover { color: white; }
+
+        .session-info h2 {
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+            text-align: center;
+        }
+        .session-info span {
+            display: block;
+            font-size: 10px;
+            color: var(--text-secondary);
+            font-family: var(--font-code);
+            margin-top: 2px;
+            text-align: center;
+        }
+
+        /* 3. CHAT CONTAINER */
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px; /* Space between messages */
+        }
+
+        /* 4. MESSAGE BUBBLES */
+        .message-wrapper {
+            display: flex;
+            width: 100%;
+            opacity: 0; /* For animation */
+        }
+
+        /* Alignment Logic */
+        .message-wrapper.user { justify-content: flex-end; }
+        .message-wrapper.bot { justify-content: flex-start; }
+
+        .bubble {
+            max-width: 75%;
+            padding: 14px 18px;
+            border-radius: 18px;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        /* -- USER STYLE -- */
+        .user .bubble {
+            background: linear-gradient(135deg, var(--user-bg-start), var(--user-bg-end));
+            color: white;
+            border-bottom-right-radius: 4px; /* The "Tail" effect */
+        }
+
+        /* -- BOT STYLE -- */
+        .bot .bubble {
+            background: var(--bot-bg);
+            border: 1px solid var(--bot-border);
+            color: #e5e5e5;
+            border-bottom-left-radius: 4px; /* The "Tail" effect */
+        }
+
+        /* Bot Avatar (Optional, adds nice context) */
+        .bot-avatar {
+            width: 32px; height: 32px;
+            background: #222;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin-right: 12px;
+            margin-top: auto; /* Aligns to bottom of message */
+            border: 1px solid var(--bot-border);
+            color: var(--text-secondary);
+        }
+
+        /* Timestamps */
+        .meta {
+            font-size: 10px;
+            margin-top: 6px;
+            display: block;
+            opacity: 0.7;
+            font-family: var(--font-code);
+        }
+
+        .user .meta { text-align: right; color: rgba(255,255,255,0.8); }
+        .bot .meta { text-align: left; color: var(--text-secondary); }
+
+        /* Empty/Error State in bubble */
+        .empty-msg { opacity: 0.5; font-style: italic; }
+
+    </style>
 </head>
 <body>
-    <div class="chat-box">
-        <h2>Conversation:{{session_id}}</h2>
-         <a href="/session/details">← Back to Sessions</a>
-        <hr>
-        {% for msg in chat %}
-            <div class="message {{ msg.role }}">
-                <strong>{{ "You" if msg.role == 'user' else "Bot" }}:</strong>
-                <p>
-                    {% if msg.message %}
-                        {{ msg.message }}
-                    {% elif msg.message %}
-                        {{ msg['message'][0]['text'] }}
-                    {% else %}
-                        <span style="color: gray;">[Empty Message]</span>
-                    {% endif %}
-                </p>
 
-                <small>{{ msg.timestamp }}</small>
+    <div class="noise"></div>
+
+    <!-- Header -->
+    <header class="app-bar">
+        <div class="app-bar-content">
+            <a href="/session/details" class="back-btn">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                Back
+            </a>
+            <div class="session-info">
+                <h2>Chat History</h2>
+                <span>ID: {{session_id}}</span>
             </div>
-            {% endfor %}
+            <div style="width: 50px;"></div> <!-- Spacer to balance layout -->
+        </div>
+    </header>
+
+    <!-- Main Chat Area -->
+    <div class="chat-container">
+
+        {% for msg in chat %}
+            <!-- Logic: Check if User or Bot to apply classes -->
+            {% if msg.role == 'user' %}
+
+                <!-- USER MESSAGE (Right Aligned) -->
+                <div class="message-wrapper user">
+                    <div class="bubble">
+                        {% if msg.message %}
+                            {{ msg.message }}
+                        {% elif msg['message'] and msg['message'][0] %}
+                            {{ msg['message'][0]['text'] }}
+                        {% else %}
+                            <span class="empty-msg">Empty Message</span>
+                        {% endif %}
+                        <span class="meta">{{ msg.timestamp }}</span>
+                    </div>
+                </div>
+
+            {% else %}
+
+                <!-- BOT MESSAGE (Left Aligned with Avatar) -->
+                <div class="message-wrapper bot">
+                    <!-- Small Bot Icon -->
+                    <div class="bot-avatar">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    </div>
+
+                    <div class="bubble">
+                        {% if msg.message %}
+                            {{ msg.message }}
+                        {% elif msg['message'] and msg['message'][0] %}
+                            {{ msg['message'][0]['text'] }}
+                        {% else %}
+                            <span class="empty-msg">No response data</span>
+                        {% endif %}
+                        <span class="meta">{{ msg.timestamp }}</span>
+                    </div>
+                </div>
+
+            {% endif %}
+        {% endfor %}
+
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Animate messages sliding up naturally
+            gsap.to(".message-wrapper", {
+                y: 0,
+                opacity: 1,
+                duration: 0.5,
+                stagger: 0.05, // Fast sequence
+                ease: "power2.out",
+                startAt: { y: 20 }
+            });
+        });
+    </script>
 </body>
 </html>
-
-
