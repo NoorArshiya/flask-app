@@ -14,8 +14,6 @@ API_KEY = os.getenv("API_KEY")
 
 app = Flask(__name__)
 
-# api_key="AIzaSyCKhi_JqRKKdO31vCta8WoVitaYxaNxJy4"
-# api_key="AIzaSyDshsPBzbqbFobchC_gPvdVOkuWxAvwVpA"
 
 @app.route('/')
 def home():
