@@ -4,13 +4,18 @@ from datetime import datetime
 import uuid
 from config import JOBS
 from google import genai
-
+from dotenv import load_dotenv
+import os
 import json
 from google.genai import types
+
+load_dotenv()
+API_KEY = os.getenv("API_KEY")
+
 app = Flask(__name__)
 
 # api_key="AIzaSyCKhi_JqRKKdO31vCta8WoVitaYxaNxJy4"
-api_key="AIzaSyDshsPBzbqbFobchC_gPvdVOkuWxAvwVpA"
+# api_key="AIzaSyDshsPBzbqbFobchC_gPvdVOkuWxAvwVpA"
 
 @app.route('/')
 def home():
@@ -54,6 +59,7 @@ def create_job():
 def ai_prompt():
     return render_template("index2.html")
 
+client = genai.Client(api_key=API_KEY)
 @app.route('/api/ai/prompt',methods=["POST"])
 def api_ai_prompt():
     try:
@@ -62,7 +68,7 @@ def api_ai_prompt():
         if not data or "prompt" not in data:
             return {"message":"Key is missing"},400
 
-        client = genai.Client(api_key=api_key)
+        # client = genai.Client(api_key=API_KEY)
         prompt=data["prompt"]
         print(prompt)
         response=client.models.generate_content(
@@ -98,7 +104,8 @@ def api_ai_prompt():
 # ai_chatbot with sessions ..
 
 app.secret_key = "flask_app_v2"     #Authentication (Security)
-client = MongoClient("mongodb://localhost:27017/")
+DATABASE_URL = os.getenv("DATABASE_URL")
+client = MongoClient(DATABASE_URL)
 database = client["ai_chatbot"]
 collection = database["chats"]
 
@@ -124,7 +131,7 @@ def ai_chatbot():
 
             print(session['chat_history'])
 
-            client = genai.Client(api_key=api_key)
+            client = genai.Client(api_key=API_KEY)
             response = client.models.generate_content(
                 model="gemini-2.5-flash-lite",
                 contents=session["chat_history"]
@@ -234,7 +241,7 @@ def view_chats(session_id):
     return render_template("chat_history.html",session_id = session_id,chat = chat_history)
 
 # ai_job_generator_CHATBOT
-client = genai.Client(api_key=api_key)
+client = genai.Client(api_key=API_KEY)
 system_instruction = f"""You are an AI Job Generator. Follow this exact interaction loop:
                  1. the user will give you the Job Title.
                  2. Then ask for the Target Country.
