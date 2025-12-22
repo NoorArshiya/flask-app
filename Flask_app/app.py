@@ -10,7 +10,7 @@ import json
 from google.genai import types
 
 load_dotenv()
-API_key = os.getenv("API_KEY")
+API_KEY = os.getenv("API_KEY")
 
 app = Flask(__name__)
 
