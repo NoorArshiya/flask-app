@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>System Diagnostics</title>
 
-    <!-- Fonts: Inter for UI, JetBrains Mono for Data -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
@@ -14,15 +14,53 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <style>
+        /* 1. THEME VARIABLES */
         :root {
+            /* DARK MODE (Default) */
             --bg-color: #050505;
             --surface-color: #0f0f0f;
+            --surface-shadow: none;
+
             --text-primary: #e0e0e0;
             --text-secondary: #666666;
+
             --border-color: rgba(255, 255, 255, 0.08);
+            --header-bg: rgba(255, 255, 255, 0.02); /* Table header tint */
+            --row-hover: rgba(255, 255, 255, 0.03);
+
             --accent-error: #ff3b30;
+            --accent-bg: rgba(255, 59, 48, 0.05);
+
+            --toggle-bg: rgba(255, 255, 255, 0.1);
+            --toggle-icon: #fff;
+
             --font-ui: 'Inter', sans-serif;
             --font-code: 'JetBrains Mono', monospace;
+        }
+
+        /* LIGHT MODE (Porcelain) */
+        [data-theme="light"] {
+            --bg-color: #f2f2f4;
+            --surface-color: #ffffff;
+            --surface-shadow: 0 4px 20px rgba(0,0,0,0.04);
+
+            --text-primary: #111827;
+            --text-secondary: #64748b;
+
+            --border-color: rgba(0, 0, 0, 0.06);
+            --header-bg: rgba(0, 0, 0, 0.02);
+            --row-hover: rgba(0, 0, 0, 0.02);
+
+            --accent-error: #dc2626; /* Slightly darker red for light mode contrast */
+            --accent-bg: rgba(220, 38, 38, 0.05);
+
+            --toggle-bg: rgba(0, 0, 0, 0.05);
+            --toggle-icon: #111;
+        }
+
+        /* SMOOTH TRANSITIONS */
+        body, .table-wrapper, th, td, h1, h2, a, .status-badge, .theme-toggle {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -55,6 +93,7 @@
             z-index: 1;
         }
 
+        /* HEADER LAYOUT */
         header {
             margin-bottom: 60px;
             display: flex;
@@ -64,7 +103,7 @@
             padding-bottom: 20px;
         }
 
-        h2 {
+        .header-left h2 {
             font-weight: 300;
             font-size: 14px;
             text-transform: uppercase;
@@ -73,20 +112,28 @@
             margin-bottom: 8px;
         }
 
-        h1 {
+        .header-left h1 {
             font-size: 32px;
             font-weight: 400;
             letter-spacing: -1px;
+            color: var(--text-primary);
+        }
+
+        /* Header Right: Badge + Toggle */
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
         }
 
         .status-badge {
             font-family: var(--font-code);
             font-size: 12px;
             color: var(--accent-error);
-            border: 1px solid rgba(255, 59, 48, 0.2);
+            border: 1px solid rgba(255, 59, 48, 0.2); /* Keep border subtle */
             padding: 6px 12px;
             border-radius: 50px;
-            background: rgba(255, 59, 48, 0.05);
+            background: var(--accent-bg);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -100,12 +147,25 @@
             box-shadow: 0 0 10px var(--accent-error);
         }
 
+        /* THEME TOGGLE BUTTON */
+        .theme-toggle {
+            background: var(--toggle-bg);
+            border: none;
+            cursor: pointer;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--toggle-icon);
+        }
+        .theme-toggle:hover { opacity: 0.8; }
+
+        /* TABLE WRAPPER */
         .table-wrapper {
             background: var(--surface-color);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            overflow: hidden; /* For rounded corners */
-            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+            overflow: hidden;
+            box-shadow: var(--surface-shadow);
         }
 
         table {
@@ -121,18 +181,17 @@
             color: var(--text-secondary);
             padding: 24px;
             border-bottom: 1px solid var(--border-color);
-            background: rgba(255,255,255,0.02);
+            background: var(--header-bg);
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        tr {
-            transition: background 0.3s ease;
+        /* Scanline Hover Effect */
+        tbody tr {
+            transition: background 0.2s ease;
         }
-
-        /* The "Scanline" Hover Effect */
         tbody tr:hover {
-            background: rgba(255, 255, 255, 0.03);
+            background: var(--row-hover);
         }
 
         td {
@@ -143,7 +202,6 @@
             vertical-align: top;
         }
 
-        /* Specific Column Styling */
         td.col-time {
             font-family: var(--font-code);
             color: var(--text-secondary);
@@ -164,6 +222,7 @@
             text-align: right;
         }
 
+        /* FOOTER */
         .footer {
             margin-top: 40px;
             display: flex;
@@ -186,7 +245,7 @@
             content: '';
             width: 0%;
             height: 1px;
-            background: white;
+            background: var(--text-primary);
             position: absolute;
             bottom: -4px;
             left: 0;
@@ -202,7 +261,6 @@
             width: 100%;
         }
 
-        /* Animation Initial State */
         .reveal-row {
             opacity: 0;
             transform: translateY(20px);
@@ -216,13 +274,22 @@
     <div class="container">
 
         <header>
-            <div>
+            <div class="header-left">
                 <h2>System Logs</h2>
                 <h1>Error Diagnostics</h1>
             </div>
-            <div class="status-badge">
-                <div class="status-dot"></div>
-                LIVE FEED
+
+            <div class="header-right">
+                <div class="status-badge">
+                    <div class="status-dot"></div>
+                    LIVE FEED
+                </div>
+
+                <!-- Theme Toggle -->
+                <button class="theme-toggle" id="themeBtn" aria-label="Toggle Theme">
+                    <svg id="sunIcon" style="display:none" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg id="moonIcon" style="display:none" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
             </div>
         </header>
 
@@ -264,9 +331,39 @@
     </div>
 
     <script>
-
         document.addEventListener("DOMContentLoaded", () => {
 
+            // 1. THEME LOGIC
+            const themeBtn = document.getElementById('themeBtn');
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            const html = document.documentElement;
+
+            // Check localStorage
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') setTheme('light');
+            else setTheme('dark');
+
+            function setTheme(mode) {
+                html.setAttribute('data-theme', mode);
+                localStorage.setItem('theme', mode);
+
+                if (mode === 'dark') {
+                    sunIcon.style.display = 'block';
+                    moonIcon.style.display = 'none';
+                } else {
+                    sunIcon.style.display = 'none';
+                    moonIcon.style.display = 'block';
+                }
+            }
+
+            themeBtn.addEventListener('click', () => {
+                const current = html.getAttribute('data-theme');
+                setTheme(current === 'dark' ? 'light' : 'dark');
+            });
+
+
+            // 2. GSAP ANIMATIONS
             gsap.from("header", {
                 y: -30,
                 opacity: 0,
@@ -278,7 +375,7 @@
                 y: 0,
                 opacity: 1,
                 duration: 0.8,
-                stagger: 0.05, // 50ms delay between each row
+                stagger: 0.05,
                 ease: "power2.out",
                 delay: 0.2
             });

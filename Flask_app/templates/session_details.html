@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,15 +11,51 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <style>
+        /* 1. THEME VARIABLES */
         :root {
+            /* DARK MODE (Default) */
             --bg-color: #050505;
             --surface-color: #0a0a0a;
+            --surface-shadow: none;
+
             --border-color: rgba(255, 255, 255, 0.08);
+            --row-hover: rgba(255, 255, 255, 0.03);
+
             --text-primary: #e0e0e0;
             --text-secondary: #666666;
+            --text-muted: #444;
+
             --accent-blue: #3b82f6;
+
+            --toggle-bg: rgba(255, 255, 255, 0.1);
+            --toggle-icon: #fff;
+
             --font-ui: 'Inter', sans-serif;
             --font-code: 'JetBrains Mono', monospace;
+        }
+
+        /* LIGHT MODE (Porcelain) */
+        [data-theme="light"] {
+            --bg-color: #f2f2f4;
+            --surface-color: #ffffff;
+            --surface-shadow: 0 4px 20px rgba(0,0,0,0.04);
+
+            --border-color: rgba(0, 0, 0, 0.06);
+            --row-hover: rgba(0, 0, 0, 0.02);
+
+            --text-primary: #111827;
+            --text-secondary: #64748b;
+            --text-muted: #cbd5e1;
+
+            --accent-blue: #2563eb;
+
+            --toggle-bg: rgba(0, 0, 0, 0.05);
+            --toggle-icon: #111;
+        }
+
+        /* Smooth Transition for Theme Swap */
+        body, .table-frame, th, td, a, .msg-count-badge, .theme-toggle {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
         body {
@@ -41,17 +77,40 @@
 
         .container { width: 100%; max-width: 900px; }
 
+        /* HEADER LAYOUT */
         header {
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 20px;
             margin-bottom: 40px;
             display: flex;
             justify-content: space-between;
-            align-items: end;
+            align-items: flex-end;
         }
 
-        h2 { font-weight: 400; font-size: 28px; letter-spacing: -0.5px; }
-        .subtitle { font-family: var(--font-code); font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+        .header-left h2 { font-weight: 400; font-size: 28px; letter-spacing: -0.5px; margin: 0; }
+        .subtitle { font-family: var(--font-code); font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: block;}
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .record-count {
+            font-family: var(--font-code); font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* THEME TOGGLE */
+        .theme-toggle {
+            background: var(--toggle-bg);
+            border: none;
+            cursor: pointer;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--toggle-icon);
+        }
+        .theme-toggle:hover { opacity: 0.8; }
 
         /* TABLE STYLING */
         .table-frame {
@@ -59,6 +118,7 @@
             border-radius: 8px;
             overflow: hidden;
             background: var(--surface-color);
+            box-shadow: var(--surface-shadow);
         }
 
         table { width: 100%; border-collapse: collapse; }
@@ -72,7 +132,7 @@
             color: var(--text-secondary);
             font-weight: 500;
             border-bottom: 1px solid var(--border-color);
-            background: rgba(255,255,255,0.01);
+            background: rgba(125,125,125,0.02); /* Universal subtle tint */
         }
 
         td {
@@ -84,17 +144,14 @@
         tr:last-child td { border-bottom: none; }
 
         /* Interactive Rows */
-        tr.data-row {
-            transition: background 0.2s ease;
-        }
         tr.data-row:hover {
-            background: rgba(255, 255, 255, 0.03);
+            background: var(--row-hover);
         }
 
         /* Session ID Link Styling */
         .session-link {
             font-family: var(--font-code);
-            color: var(--text-primary); /* Keep white initially */
+            color: var(--text-primary);
             text-decoration: none;
             display: block;
             width: 100%;
@@ -104,23 +161,23 @@
 
         .session-link::before {
             content: '#';
-            color: var(--text-secondary);
+            color: var(--text-secondary); /* Adapts to light/dark */
             margin-right: 8px;
             opacity: 0.5;
         }
 
-        /* Hover effect on the specific link */
         tr.data-row:hover .session-link {
             color: var(--accent-blue);
         }
 
         .msg-count-badge {
             font-family: var(--font-code);
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--toggle-bg); /* Reusing the subtle bg color */
             padding: 4px 10px;
             border-radius: 4px;
             font-size: 12px;
             color: var(--text-secondary);
+            border: 1px solid var(--border-color);
         }
 
         /* Footer */
@@ -140,11 +197,20 @@
 
     <div class="container">
         <header>
-            <div>
-                <div class="subtitle">Database</div>
+            <div class="header-left">
+                <span class="subtitle">Database</span>
                 <h2>Session Registry</h2>
             </div>
-            <div class="subtitle">{{ sessions|length }} RECORDS FOUND</div>
+
+            <div class="header-right">
+                <span class="record-count">{{ sessions|length }} RECORDS</span>
+
+                <!-- Toggle Button -->
+                <button class="theme-toggle" id="themeBtn" aria-label="Toggle Theme">
+                    <svg id="sunIcon" style="display:none" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg id="moonIcon" style="display:none" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+            </div>
         </header>
 
         <div class="table-frame">
@@ -174,6 +240,43 @@
     </div>
 
     <script>
+        // 1. THEME LOGIC
+        const themeBtn = document.getElementById('themeBtn');
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+        const html = document.documentElement;
+
+        // Check Storage
+        const savedTheme = localStorage.getItem('theme');
+
+        // Initial Set
+        if (savedTheme === 'light') {
+            setTheme('light');
+        } else {
+            setTheme('dark');
+        }
+
+        function setTheme(mode) {
+            html.setAttribute('data-theme', mode);
+            localStorage.setItem('theme', mode);
+
+            if (mode === 'dark') {
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            } else {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            }
+        }
+
+        // Toggle Event
+        themeBtn.addEventListener('click', () => {
+            const current = html.getAttribute('data-theme');
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        });
+
+
+        // 2. ANIMATION (GSAP)
         // Staggered Entrance
         gsap.from(".data-row", {
             y: 20,
@@ -182,6 +285,14 @@
             stagger: 0.05,
             ease: "power2.out",
             delay: 0.2
+        });
+
+        // Header entrance
+        gsap.from("header", {
+            y: -10,
+            opacity: 0,
+            duration: 1,
+            ease: "power3.out"
         });
     </script>
 </body>

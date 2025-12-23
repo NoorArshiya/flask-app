@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,16 +14,47 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <style>
-        /* 1. CORE THEME - MATCHING THE ERROR PAGE */
+        /* 1. THEME VARIABLES */
         :root {
+            /* DARK MODE (Default) */
             --bg-color: #050505;
             --card-bg: #0a0a0a;
             --card-border: rgba(255, 255, 255, 0.08);
+
             --text-primary: #ededed;
             --text-secondary: #888888;
-            --accent-glow: rgba(255, 255, 255, 0.15);
+            --text-header-gradient: linear-gradient(to right, #fff, #888);
+
+            --spotlight-color: rgba(255, 255, 255, 0.15); /* White glow */
+            --card-shadow: none;
+
+            --toggle-bg: rgba(255, 255, 255, 0.1);
+            --toggle-icon: #fff;
+
             --font-ui: 'Inter', sans-serif;
             --font-code: 'JetBrains Mono', monospace;
+        }
+
+        /* LIGHT MODE (Porcelain) */
+        [data-theme="light"] {
+            --bg-color: #f2f2f4;
+            --card-bg: #ffffff;
+            --card-border: rgba(0, 0, 0, 0.06);
+
+            --text-primary: #111827;
+            --text-secondary: #64748b;
+            --text-header-gradient: linear-gradient(to right, #111, #666);
+
+            --spotlight-color: rgba(0, 0, 0, 0.05); /* Dark shadow reveal */
+            --card-shadow: 0 4px 20px rgba(0,0,0,0.03);
+
+            --toggle-bg: rgba(0, 0, 0, 0.05);
+            --toggle-icon: #111;
+        }
+
+        /* GLOBAL SMOOTH TRANSITION */
+        body, .card-content, .card-wrapper, h1, .subtitle, .click-hint, .btn-back, .theme-toggle {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -50,7 +81,7 @@
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
         }
 
-        /* 2. LAYOUT GRID (BENTO BOX STYLE) */
+        /* 2. LAYOUT GRID */
         .dashboard-container {
             position: relative;
             z-index: 1;
@@ -73,7 +104,7 @@
             font-size: 32px;
             font-weight: 500;
             letter-spacing: -1px;
-            background: linear-gradient(to right, #fff, #888);
+            background: var(--text-header-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -88,6 +119,22 @@
             display: block;
         }
 
+        .header-right {
+            display: flex; align-items: center; gap: 20px;
+        }
+
+        /* THEME TOGGLE */
+        .theme-toggle {
+            background: var(--toggle-bg);
+            border: none;
+            cursor: pointer;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--toggle-icon);
+        }
+        .theme-toggle:hover { opacity: 0.8; }
+
         .grid-layout {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -97,24 +144,24 @@
         /* 3. LUXURY CARDS */
         .card-wrapper {
             position: relative;
-            background: var(--card-border); /* This forms the border */
-            padding: 1px; /* The border width */
+            background: var(--card-border); /* The border color comes from here */
+            padding: 1px;
             border-radius: 12px;
             overflow: hidden;
             transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
             text-decoration: none;
             color: inherit;
             display: block;
+            box-shadow: var(--card-shadow);
         }
 
         .card-wrapper:hover {
             transform: translateY(-4px);
         }
 
-        /* The Inner Content */
         .card-content {
             background: var(--card-bg);
-            border-radius: 11px; /* Slightly less than wrapper */
+            border-radius: 11px;
             padding: 30px;
             height: 100%;
             position: relative;
@@ -124,18 +171,18 @@
             justify-content: space-between;
         }
 
-        /* The Spotlight Glow Effect */
+        /* SPOTLIGHT EFFECT */
         .card-wrapper::before {
             content: "";
             position: absolute;
             left: 0; top: 0; width: 100%; height: 100%;
             background: radial-gradient(
                 800px circle at var(--mouse-x) var(--mouse-y),
-                rgba(255, 255, 255, 0.15),
+                var(--spotlight-color),
                 transparent 40%
             );
             z-index: 1;
-            opacity: 0; /* Hidden by default */
+            opacity: 0;
             transition: opacity 0.4s ease;
         }
 
@@ -143,7 +190,6 @@
             opacity: 1;
         }
 
-        /* Card Typography */
         .card-label {
             font-size: 13px;
             color: var(--text-secondary);
@@ -177,21 +223,14 @@
             transform: translateY(0);
         }
 
-        /* Specific Grid Spans */
         .span-2 { grid-column: span 2; }
-
-        /* Icons (SVG) */
         .icon { width: 18px; height: 18px; opacity: 0.7; }
 
-        /* Error Card Specifics */
         .error-card .card-value { color: #ff3b30; }
         .error-card .icon { color: #ff3b30; }
 
         /* 4. BACK LINK */
-        .nav-footer {
-            margin-top: 60px;
-        }
-
+        .nav-footer { margin-top: 60px; }
         .btn-back {
             text-decoration: none;
             color: var(--text-secondary);
@@ -203,7 +242,6 @@
         }
         .btn-back:hover { color: var(--text-primary); }
 
-        /* Animation States */
         .anim-entry { opacity: 0; transform: translateY(20px); }
 
     </style>
@@ -219,10 +257,19 @@
                 <span class="subtitle">Real-time Analytics</span>
                 <h1>Chatbot Performance</h1>
             </div>
-            <!-- Live Indicator -->
-            <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary); font-family:var(--font-code);">
-                <span style="width:8px; height:8px; background:#22c55e; border-radius:50%; box-shadow:0 0 10px #22c55e;"></span>
-                SYSTEM OPERATIONAL
+
+            <div class="header-right">
+                <!-- Live Indicator -->
+                <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary); font-family:var(--font-code); margin-right: 20px;">
+                    <span style="width:8px; height:8px; background:#22c55e; border-radius:50%; box-shadow:0 0 10px #22c55e;"></span>
+                    LIVE
+                </div>
+
+                <!-- Toggle Button -->
+                <button class="theme-toggle" id="themeBtn" aria-label="Toggle Theme">
+                    <svg id="sunIcon" style="display:none" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg id="moonIcon" style="display:none" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
             </div>
         </header>
 
@@ -232,11 +279,9 @@
             <a href="/session/details" class="card-wrapper span-2 anim-entry">
                 <div class="card-content">
                     <div class="card-label">
-                        <!-- SVG Icon: Users -->
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                         TOTAL SESSIONS
                     </div>
-                    <!-- 'data-target' is used by GSAP to count up -->
                     <div class="card-value" data-target="{{ sessions }}">0</div>
                     <div class="click-hint">VIEW SESSION DETAILS →</div>
                 </div>
@@ -246,7 +291,6 @@
             <div class="card-wrapper anim-entry">
                 <div class="card-content">
                     <div class="card-label">
-                        <!-- SVG Icon: Chat -->
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
                         ALL MESSAGES
                     </div>
@@ -258,7 +302,6 @@
             <a href="/error/details" class="card-wrapper error-card anim-entry">
                 <div class="card-content">
                     <div class="card-label">
-                        <!-- SVG Icon: Alert -->
                         <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                         SYSTEM ERRORS
                     </div>
@@ -301,8 +344,35 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            // 1. THEME LOGIC
+            const themeBtn = document.getElementById('themeBtn');
+            const sunIcon = document.getElementById('sunIcon');
+            const moonIcon = document.getElementById('moonIcon');
+            const html = document.documentElement;
 
-            // 1. Staggered Entrance Animation
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') setTheme('light');
+            else setTheme('dark');
+
+            function setTheme(mode) {
+                html.setAttribute('data-theme', mode);
+                localStorage.setItem('theme', mode);
+
+                if (mode === 'dark') {
+                    sunIcon.style.display = 'block';
+                    moonIcon.style.display = 'none';
+                } else {
+                    sunIcon.style.display = 'none';
+                    moonIcon.style.display = 'block';
+                }
+            }
+
+            themeBtn.addEventListener('click', () => {
+                const current = html.getAttribute('data-theme');
+                setTheme(current === 'dark' ? 'light' : 'dark');
+            });
+
+            // 2. ANIMATIONS
             gsap.to(".anim-entry", {
                 y: 0,
                 opacity: 1,
@@ -311,28 +381,26 @@
                 ease: "power4.out"
             });
 
-            // 2. Number Counter Animation
+            // Number Counter
             const numbers = document.querySelectorAll('.card-value');
             numbers.forEach(num => {
                 const target = parseInt(num.getAttribute('data-target'));
                 gsap.to(num, {
                     innerHTML: target,
                     duration: 1.5,
-                    snap: { innerHTML: 1 }, // Snap to whole numbers
+                    snap: { innerHTML: 1 },
                     ease: "power2.out",
                     delay: 0.5
                 });
             });
 
-            // 3. Spotlight Hover Effect Logic
+            // 3. SPOTLIGHT HOVER LOGIC
             const cards = document.querySelectorAll('.card-wrapper');
-
             document.querySelector('.grid-layout').onmousemove = e => {
                 for(const card of cards) {
                     const rect = card.getBoundingClientRect();
                     const x = e.clientX - rect.left;
                     const y = e.clientY - rect.top;
-
                     card.style.setProperty('--mouse-x', `${x}px`);
                     card.style.setProperty('--mouse-y', `${y}px`);
                 }
