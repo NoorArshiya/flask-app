@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 import os
 import json
 from google.genai import types
+import math
 
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
@@ -223,9 +224,19 @@ dest_client = MongoClient(DATABASE_CONN_STR)
 dest_database = dest_client["ErrorLogsWJ"]
 dest_collection = dest_database["error_logs"]
 
-@app.route('/api/error-logs')
-def error_logs():
-    logs_data = list(dest_collection.find().sort("timestamp",-1))
+@app.route('/api/error-logs/<int:page>')
+def error_logs(page):
+    per_page_docs = 50
+    skip = (page-1) * per_page_docs
+
+    logs_data = list(dest_collection.find()
+                     .sort("timestamp",-1).skip(skip).limit(per_page_docs))
+
+    total_records = dest_collection.count_documents({})
+    total_pages = int(math.ceil(total_records/per_page_docs))
+
+    # total_pages =per_page_docs/len(logs_data)
+
     pipeline = [
         {
             "$facet": {
@@ -252,7 +263,12 @@ def error_logs():
     ]
 
     stats_data = list(dest_collection.aggregate(pipeline))[0]
-    return render_template("error_logs.html",logs = logs_data,stats = stats_data)
+    return render_template("error_logs.html",
+        logs = logs_data,
+        stats = stats_data,
+        current_page = page,
+        total_pages = total_pages
+    )
 
 # ai_job_generator_CHATBOT
 client = genai.Client(api_key=API_KEY)
