@@ -1,99 +1,467 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <title>ChatBot</title>
-    <!-- Make sure this file exists in your static folder -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='chatbot.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Interface</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+
+    <!-- GSAP for Animation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+        /* 1. THEME VARIABLES */
+        :root {
+            /* DARK MODE (Default) */
+            --bg-color: #050505;
+            --chat-bg: #050505;
+            --header-bg: rgba(10, 10, 10, 0.8);
+
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+
+            --bot-bubble: #1a1a1a;
+            --bot-border: rgba(255, 255, 255, 0.08);
+
+            --user-bubble: linear-gradient(135deg, #3b82f6, #2563eb);
+            --user-text: #ffffff;
+
+            --input-bg: rgba(20, 20, 20, 0.6);
+            --input-border: rgba(255, 255, 255, 0.1);
+            --input-focus: rgba(255, 255, 255, 0.2);
+
+            --toggle-bg: rgba(255,255,255,0.1);
+            --toggle-icon: #fff;
+
+            --font-ui: 'Inter', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        /* LIGHT MODE (Porcelain) */
+        [data-theme="light"] {
+            --bg-color: #f2f2f4;
+            --chat-bg: #f2f2f4;
+            --header-bg: rgba(255, 255, 255, 0.85);
+
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+
+            --bot-bubble: #ffffff;
+            --bot-border: rgba(0, 0, 0, 0.05);
+
+            --user-bubble: linear-gradient(135deg, #2563eb, #1d4ed8);
+
+            --input-bg: rgba(255, 255, 255, 0.8);
+            --input-border: rgba(0, 0, 0, 0.1);
+            --input-focus: rgba(37, 99, 235, 0.3);
+
+            --toggle-bg: rgba(0,0,0,0.05);
+            --toggle-icon: #111;
+        }
+
+        /* Global Transitions */
+        body, .app-bar, .bubble, .input-container, input, button {
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-ui);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Prevent body scroll, handle in chat window */
+        }
+
+        /* Noise Texture */
+        .noise {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0; opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* 2. HEADER (App Bar) */
+        .app-bar {
+            height: 70px;
+            background: var(--header-bg);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--bot-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.5px; }
+        .brand span { font-size: 10px; color: var(--text-secondary); font-family: var(--font-code); border: 1px solid var(--bot-border); padding: 4px 8px; border-radius: 20px; }
+
+        .controls { display: flex; gap: 15px; align-items: center; }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 13px;
+            transition: color 0.2s;
+            font-weight: 500;
+        }
+        .nav-link:hover { color: var(--text-primary); }
+
+        .icon-btn {
+            background: none; border: none; cursor: pointer; color: var(--text-secondary);
+            transition: color 0.2s; display: flex; align-items: center;
+        }
+        .icon-btn:hover { color: #ff3b30; } /* Red for clear */
+
+        /* Theme Toggle */
+        .theme-toggle {
+            background: var(--toggle-bg);
+            border: none; cursor: pointer; width: 32px; height: 32px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            color: var(--toggle-icon);
+        }
+
+        /* 3. CHAT WINDOW */
+        #chatWindow {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px 20px 120px 20px; /* Bottom padding for input space */
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            scroll-behavior: smooth;
+            z-index: 1;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Custom Scrollbar */
+        #chatWindow::-webkit-scrollbar { width: 6px; }
+        #chatWindow::-webkit-scrollbar-track { background: transparent; }
+        #chatWindow::-webkit-scrollbar-thumb { background: rgba(100,100,100,0.2); border-radius: 10px; }
+
+        /* Message Bubbles */
+        .message-row {
+            display: flex;
+            width: 100%;
+            opacity: 0; /* JS handles fade in */
+        }
+
+        .message-row.user { justify-content: flex-end; }
+        .message-row.model { justify-content: flex-start; } /* Google logic uses 'model' or 'bot' */
+        .message-row.bot { justify-content: flex-start; }
+
+        .bubble {
+            max-width: 75%;
+            padding: 16px 20px;
+            border-radius: 20px;
+            font-size: 15px;
+            line-height: 1.6;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .user .bubble {
+            background: var(--user-bubble);
+            color: var(--user-text);
+            border-bottom-right-radius: 4px;
+        }
+
+        .model .bubble, .bot .bubble {
+            background: var(--bot-bubble);
+            border: 1px solid var(--bot-border);
+            color: var(--text-primary);
+            border-bottom-left-radius: 4px;
+        }
+
+        .sender-name {
+            font-size: 10px;
+            margin-bottom: 4px;
+            color: var(--text-secondary);
+            font-family: var(--font-code);
+            display: block;
+        }
+
+        /* 4. FLOATING INPUT AREA */
+        .input-zone {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 800px;
+            z-index: 100;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            background: var(--input-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--input-border);
+            border-radius: 50px;
+            padding: 8px 8px 8px 24px;
+            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .input-container:focus-within {
+            border-color: var(--input-focus);
+            box-shadow: 0 15px 40px -5px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+
+        input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: var(--font-ui);
+            font-size: 16px;
+            outline: none;
+            height: 44px;
+        }
+
+        input::placeholder { color: var(--text-secondary); opacity: 0.7; }
+
+        .send-btn {
+            background: var(--text-primary);
+            color: var(--bg-color);
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .send-btn:hover { transform: scale(1.05); }
+        .send-btn:active { transform: scale(0.95); }
+
+        .send-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+    </style>
 </head>
 <body>
-<h1>AI Chatbot </h1>
+    <div class="noise"></div>
 
-<div id="chatWindow" style="border: 1px solid #000; height: 250px; overflow-y: scroll; padding: 10px;"></div>
+    <!-- HEADER -->
+    <header class="app-bar">
+        <div class="brand">
+            <div style="width:10px; height:10px; background:#22c55e; border-radius:50%; box-shadow: 0 0 10px #22c55e;"></div>
+            <h1>AI Chatbot</h1>
+            <span>v2.0.4</span>
+        </div>
 
-<br>
+        <div class="controls">
+            <!-- Link to Stats Dashboard -->
+            <a href="/chats/stats" class="nav-link">Analytics</a>
 
-<input id="userInput" type="text" placeholder="Type Your Message..">
-<button onclick="sendMessage()">Send</button>
-<button onclick="clearHistory()">Clear Conversation</button>
+            <!-- Clear History -->
+            <button onclick="clearHistory()" class="icon-btn" title="Clear Conversation">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
 
-<script>
-    let messages = [];
-    const inputArea = document.getElementById("userInput");
-    const chatWindow = document.getElementById("chatWindow");
+            <!-- Theme Toggle -->
+            <button class="theme-toggle" id="themeBtn" aria-label="Toggle Theme">
+                <svg id="sunIcon" style="display:none" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg id="moonIcon" style="display:none" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+        </div>
+    </header>
 
-    window.onload = function() {
-        loadHistory();
-    };
+    <!-- CHAT AREA -->
+    <div id="chatWindow">
+        <!-- Messages will be injected here via JS -->
+    </div>
 
-    function loadHistory() {
-        fetch('/get_history')
+    <!-- INPUT AREA -->
+    <div class="input-zone">
+        <div class="input-container">
+            <input id="userInput" type="text" placeholder="Ask anything..." autocomplete="off">
+            <button class="send-btn" onclick="sendMessage()">
+                <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 1. THEME LOGIC
+        const themeBtn = document.getElementById('themeBtn');
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+        const html = document.documentElement;
+
+        // Initial Theme Load
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        setTheme(savedTheme);
+
+        function setTheme(mode) {
+            html.setAttribute('data-theme', mode);
+            localStorage.setItem('theme', mode);
+            if (mode === 'dark') {
+                sunIcon.style.display = 'block'; moonIcon.style.display = 'none';
+            } else {
+                sunIcon.style.display = 'none'; moonIcon.style.display = 'block';
+            }
+        }
+
+        themeBtn.addEventListener('click', () => {
+            const current = html.getAttribute('data-theme');
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        });
+
+        // 2. CHAT LOGIC
+        const chatWindow = document.getElementById("chatWindow");
+        const inputArea = document.getElementById("userInput");
+
+        // Allow "Enter" key to send
+        inputArea.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") sendMessage();
+        });
+
+        window.onload = function() {
+            loadHistory();
+        };
+
+        // Helper: Create and Append Message with Animation
+        function appendMessage(role, text, animate = true) {
+            const rowDiv = document.createElement("div");
+            // Normalize role names (Google Gemini sometimes uses 'model')
+            const cssRole = (role === 'user') ? 'user' : 'bot';
+            const displayRole = (role === 'user') ? 'You' : 'AI Assistant';
+
+            rowDiv.className = `message-row ${cssRole}`;
+
+            // Allow basic HTML like <b> or <br>, or simple text
+            rowDiv.innerHTML = `
+                <div class="bubble">
+                    <span class="sender-name">${displayRole}</span>
+                    <div class="message-text">${text}</div>
+                </div>
+            `;
+
+            chatWindow.appendChild(rowDiv);
+
+            // Auto Scroll
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            // GSAP Slide-In Animation
+            if(animate) {
+                gsap.fromTo(rowDiv,
+                    { y: 20, opacity: 0 },
+                    { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }
+                );
+            } else {
+                rowDiv.style.opacity = 1; // Show immediately if history
+            }
+        }
+
+        function loadHistory() {
+            fetch('/get_history')
+                .then(res => res.json())
+                .then(data => {
+                    if(data.history) {
+                        data.history.forEach((msg, index) => {
+                            if(msg.parts && msg.parts[0]) {
+                                // Add small delay for staggering effect on load (optional)
+                                setTimeout(() => {
+                                    appendMessage(msg.role, msg.parts[0].text, true);
+                                }, index * 50);
+                            }
+                        });
+                    }
+                })
+                .catch(err => console.error("Error loading history:", err));
+        }
+
+        function sendMessage() {
+            let text = inputArea.value.trim();
+            if (!text) return;
+
+            // Clear Input
+            inputArea.value = "";
+
+            // 1. Show User Message
+            appendMessage("user", text);
+
+            // 2. Show "Thinking..." Placeholder (Optional UX improvement)
+            const thinkingId = "thinking-" + Date.now();
+            const thinkingDiv = document.createElement("div");
+            thinkingDiv.className = "message-row bot";
+            thinkingDiv.id = thinkingId;
+            thinkingDiv.innerHTML = `
+                <div class="bubble" style="opacity:0.7">
+                    <span class="sender-name">AI Assistant</span>
+                    <i>Thinking...</i>
+                </div>`;
+            chatWindow.appendChild(thinkingDiv);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            gsap.fromTo(thinkingDiv, {y:10, opacity:0}, {y:0, opacity:1, duration:0.3});
+
+            // 3. Send to Server
+            fetch("/ai/chatbot", {
+                method: "POST",
+                headers: {"Content-Type": "application/json" },
+                body: JSON.stringify({prompt: text})
+            })
             .then(res => res.json())
             .then(data => {
-                if(data.history) {
-                    data.history.forEach(msg => {
-                        // Safety check to ensure text exists
-                        if(msg.parts && msg.parts[0]) {
-                            let text = msg.parts[0].text;
-                            let role = msg.role;
-                            if (role == "user") {
-                                chatWindow.innerHTML += "<p><b>You:</b> " + text + "</p>";
-                            } else {
-                                chatWindow.innerHTML += "<p><b>Bot:</b> " + text + "</p>";
-                            }
-                        }
-                    });
-                    // FIXED COMMENT: Use // for JavaScript
-                    chatWindow.scrollTop = chatWindow.scrollHeight;
-                }
+                // Remove Thinking Bubble
+                const thinkingBubble = document.getElementById(thinkingId);
+                if(thinkingBubble) thinkingBubble.remove();
+
+                let reply = data.message;
+                appendMessage("model", reply);
             })
-            // FIXED COMMENT: Use // for JavaScript
-            .catch(err => console.error("Error loading history:", err));
-    }
+            .catch(err => {
+                console.error("Fetch Error:", err);
+                // Remove Thinking Bubble
+                const thinkingBubble = document.getElementById(thinkingId);
+                if(thinkingBubble) thinkingBubble.remove();
 
-    function sendMessage() {
-        let text = inputArea.value;
-        if (!text) return;
+                // Show Error
+                appendMessage("bot", "<span style='color:#ff3b30'>Error: Could not connect to neural network.</span>");
+            });
+        }
 
-        console.log("Sending: " + text); // Debugging line
-
-        // Add user message to screen immediately
-        messages.push({ role: "user", content : text});
-        chatWindow.innerHTML += "<p><b>You:</b> " + text + "</p>";
-        inputArea.value = "";
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-
-        fetch("/ai/chatbot", {
-            method: "POST",
-            headers: {"Content-Type": "application/json" },
-            body: JSON.stringify({prompt: text})
-        })
-        .then(res => res.json())
-        .then(data => {
-            console.log("Response received"); // Debugging line
-            let reply = data.message;
-            messages.push({ role: "model", content: reply });
-            chatWindow.innerHTML += "<p><b>Bot:</b> " + reply + "</p>";
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        })
-        .catch(err => {
-            console.error("Fetch Error:", err);
-            chatWindow.innerHTML += "<p style='color:red'>Error sending message.</p>";
-        });
-    }
-
-    function clearHistory() {
-        fetch('/clear_history', { method: "POST" })
-        .then(response => {
-            if (response.ok) {
-                location.reload();
-            } else {
-                console.error("Server failed to clear history");
+        function clearHistory() {
+            if(confirm("Delete all conversation memory?")) {
+                fetch('/clear_history', { method: "POST" })
+                .then(response => {
+                    if (response.ok) {
+                        // Fade out all messages
+                        gsap.to(".message-row", {
+                            opacity: 0,
+                            y: -10,
+                            duration: 0.3,
+                            onComplete: () => {
+                                chatWindow.innerHTML = "";
+                            }
+                        });
+                    }
+                })
+                .catch(err => console.error("Error:", err));
             }
-        })
-        .catch(err => console.error("Error:", err));
-    }
-</script>
+        }
+    </script>
 </body>
 </html>
-
